@@ -1,0 +1,25 @@
+name : Deploy to the main
+on : 
+  push:
+    banches : 
+      -"main"
+jobs : 
+  redeploy_frontend:
+    runs-on:ubuntu-latest
+    name : redeploying frontend to the staging
+
+    steps : 
+       name : ssh into server
+       run : |
+          echo "${{SSH_SECRET_KEY}}" &> ~/ssh_key
+          mkdir -p /home/runner/.ssh
+          ls /home/runner/.ssh
+          touch /home/runner/.ssh/known_hosts
+          
+          echo "${{known_hosts}}" &> home/runner/.ssh/known_hosts
+          chmod 700 /home/runner/ssh_key
+          ssh -i ~/.ssh_key root@43.204.100.21
+          cd mono_dev
+          pnpm install
+          pnpm run build
+          pm2 restart all
