@@ -1,34 +1,18 @@
-name: Deploy to the main
-
+name: Deploy to staging
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  redeploy_frontend:
+  redeploy_everything:
     runs-on: ubuntu-latest
-    name: Redeploying frontend to the staging
-
+    name: Deploying everything to the staging cluster
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Setup SSH and Deploy
-        env:
-          SSH_SECRET_KEY: ${{ secrets.SSH_SECRET_KEY }}
-          KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
-        run: |
-          echo "$SSH_SECRET_KEY" > ~/ssh_key
-          chmod 600 ~/ssh_key
-          
-          mkdir -p ~/.ssh
-          echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-          
-          ssh -i ~/ssh_key -o StrictHostKeyChecking=no ubuntu@43.204.100.21 << 'EOF'
-            cd mono_dev
-            pnpm install
-            pnpm run build
-            pm2 restart all
-          EOF
+      - run: |
+          echo "${{ secrets.SSH_SECRET_KEY }}" &> ~/ssh_key
+          mkdir -p /home/runner/.ssh
+          ls /home/runner/.ssh
+          touch /home/runner/.ssh/known_hosts
+          echo "${{ secrets.KNOWN_HOSTS}}" &> /home/runner/.ssh/known_hosts
+          chmod 700 /home/runner/ssh_key
+          ssh -i ~/ssh_key root@43.204.100.21 -t "cd week-25-ci-next-app/ && git pull origin main && export PATH=/root/.nvm/versions/node/v22.13.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin && npm install -g pnpm && pnpm install && pnpm run build && pm2 restart all"
